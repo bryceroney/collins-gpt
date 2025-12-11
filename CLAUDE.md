@@ -47,6 +47,7 @@ pyproject.toml              # UV dependency configuration
 - **Frontend:** Bootstrap 5.3.2, Bootstrap Icons 1.11.1, Vanilla JavaScript
 - **AI API:** OpenRouter (via OpenAI SDK 2.9.0+)
 - **Configuration:** python-dotenv for environment variables
+ - **Forms & CSRF:** Uses Flask-WTF / WTForms for server-side form validation and CSRF protection (see app/forms.py)
 
 ### Database & Persistence
 **NONE** - Application is currently stateless. All data is ephemeral (exists only during request lifecycle).
@@ -62,12 +63,13 @@ pyproject.toml              # UV dependency configuration
 **Services are framework-agnostic** - No Flask dependencies, pure Python business logic:
 - `openai_client.py`: Client configuration, API key validation
 - `dixer_service.py`: Prompt building, response parsing, streaming generation
+ - `forms.py`: WTForms definitions for server-side validation and CSRF token management
 
 ### Configuration Management
 - **Environment Variables:** `.env` file (loaded via python-dotenv)
   - `OPENROUTER_API_KEY` - Required for AI generation
-- **App Secrets:** Currently hardcoded in `app/__init__.py` (SECRET_KEY = 'dev-secret-key-change-in-production')
-  - ⚠️ **TODO:** Move to environment variables before production deployment
+**App Secrets:** `SECRET_KEY` is now loaded from the environment when available; update your `.env` in production.
+  - ⚠️ **TODO:** Ensure `SECRET_KEY` is set in `.env` or environment for production deployments
 
 ### Frontend Architecture
 - **CSS Framework:** Bootstrap 5 (CDN)
@@ -164,7 +166,6 @@ uv run pyright
 
 ### Security Considerations
 - **API Keys:** NEVER commit `.env` to version control (already in `.gitignore`)
-- **CSRF Protection:** ⚠️ NOT CURRENTLY IMPLEMENTED (Flask-WTF recommended for forms)
 - **Input Validation:** Client-side and server-side validation required
 - **Secret Keys:** Move hardcoded secrets to environment variables
 
@@ -179,7 +180,6 @@ uv run pyright
 4. **WSGI Server:** Development server only - add Gunicorn/uWSGI for production
 5. **Error Logging:** Basic Flask logging - consider structured logging (Loguru, Python logging)
 6. **Rate Limiting:** No API protection - consider Flask-Limiter
-7. **CSRF Protection:** Not configured - add Flask-WTF
 8. **Environment-Based Config:** Hardcoded values - create proper config classes
 
 ### Known Technical Debt

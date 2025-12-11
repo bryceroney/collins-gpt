@@ -39,11 +39,12 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <form id="dixer-form">
+                <form id="dixer-form" method="post" action="{{ url_for('main.government_question_writer_stream') }}">
+                    {{ form.hidden_tag() }}
                     <!-- Answer Word Count -->
                     <div class="mb-4">
                         <label for="word_count" class="form-label fw-semibold">
-                            Answer Length: <span id="word-count-value" class="text-labor">{{ form_data.word_count }}</span> words
+                            Answer Length: <span id="word-count-value" class="text-labor">{{ form.word_count.data }}</span> words
                         </label>
                         <input
                             type="range"
@@ -53,7 +54,7 @@
                             min="100"
                             max="400"
                             step="25"
-                            value="{{ form_data.word_count }}">
+                            value="{{ form.word_count.data }}">
                         <div class="d-flex justify-content-between">
                             <small class="text-muted">100</small>
                             <small class="text-muted">250</small>
@@ -73,7 +74,7 @@
                             name="topic"
                             rows="4"
                             placeholder="Enter the core policy, funding announcement, or news story..."
-                            required>{{ form_data.topic }}</textarea>
+                            required>{{ form.topic.data }}</textarea>
                         <div class="form-text">The main subject the question will be about.</div>
                     </div>
 
@@ -88,7 +89,7 @@
                             id="member_name"
                             name="member_name"
                             placeholder="e.g., Ms Sharon Claydon"
-                            value="{{ form_data.member_name }}">
+                            value="{{ form.member_name.data }}">
                         <div class="form-text">Leave blank if unknown - a placeholder will be used.</div>
                     </div>
 
@@ -103,7 +104,7 @@
                             id="electorate"
                             name="electorate"
                             placeholder="e.g., Newcastle"
-                            value="{{ form_data.electorate }}">
+                            value="{{ form.electorate.data }}">
                         <div class="form-text">Leave blank if unknown - a placeholder will be used.</div>
                     </div>
 
@@ -113,10 +114,10 @@
                             Strategy <span class="text-danger">*</span>
                         </label>
                         <select class="form-select" id="strategy" name="strategy" required>
-                            <option value="option_a" {% if form_data.strategy == 'option_a' %}selected{% endif %}>
+                            <option value="option_a" {% if form.strategy.data == 'option_a' %}selected{% endif %}>
                                 Option A: Good News (Positive)
                             </option>
-                            <option value="option_b" {% if form_data.strategy == 'option_b' %}selected{% endif %}>
+                            <option value="option_b" {% if form.strategy.data == 'option_b' %}selected{% endif %}>
                                 Option B: Contrast (Attack)
                             </option>
                         </select>
@@ -132,16 +133,16 @@
                             AI Model <span class="text-danger">*</span>
                         </label>
                         <select class="form-select form-select-sm" id="model" name="model" required>
-                            <option value="anthropic/claude-sonnet-4.5" {% if form_data.get('model', 'anthropic/claude-sonnet-4.5') == 'anthropic/claude-sonnet-4.5' %}selected{% endif %}>
+                            <option value="anthropic/claude-sonnet-4.5" {% if form.model.data == 'anthropic/claude-sonnet-4.5' %}selected{% endif %}>
                                 Claude Sonnet 4.5
                             </option>
-                            <option value="google/gemini-2.5-flash" {% if form_data.get('model') == 'google/gemini-2.5-flash' %}selected{% endif %}>
+                            <option value="google/gemini-2.5-flash" {% if form.model.data == 'google/gemini-2.5-flash' %}selected{% endif %}>
                                 Gemini 2.5 Flash
                             </option>
-                            <option value="openai/gpt-5-mini" {% if form_data.get('model') == 'openai/gpt-5-mini' %}selected{% endif %}>
+                            <option value="openai/gpt-5-mini" {% if form.model.data == 'openai/gpt-5-mini' %}selected{% endif %}>
                                 GPT-5 Mini
                             </option>
-                            <option value="openai/gpt-5.1" {% if form_data.get('model') == 'openai/gpt-5.1' %}selected{% endif %}>
+                            <option value="openai/gpt-5.1" {% if form.model.data == 'openai/gpt-5.1' %}selected{% endif %}>
                                 GPT-5.1
                             </option>
                         </select>
@@ -268,6 +269,35 @@
     const errorMessage = document.getElementById('error-message');
     const wordCountSlider = document.getElementById('word_count');
     const wordCountValue = document.getElementById('word-count-value');
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    const csrfToken = csrfInput ? csrfInput.value : null;
+    // Initialize slider display
+    if (wordCountValue && wordCountSlider) {
+        wordCountValue.textContent = wordCountSlider.value || '{{ form.word_count.data or 200 }}';
+    }
+
+    function clearFieldErrors() {
+        // Remove invalid classes and feedback messages
+        const invalids = document.querySelectorAll('.is-invalid');
+        invalids.forEach(el => el.classList.remove('is-invalid'));
+        const feedbacks = document.querySelectorAll('.invalid-feedback.js-field-error');
+        feedbacks.forEach(f => f.remove());
+    }
+
+    function showFieldErrors(errors) {
+        // errors: object mapping field -> message
+        clearFieldErrors();
+        for (const [field, msg] of Object.entries(errors)) {
+            const el = document.querySelector('[name="' + field + '"]');
+            if (el) {
+                el.classList.add('is-invalid');
+                const fb = document.createElement('div');
+                fb.className = 'invalid-feedback js-field-error d-block';
+                fb.textContent = msg;
+                el.parentNode.appendChild(fb);
+            }
+        }
+    }
 
     // Update word count display
     wordCountSlider.addEventListener('input', (e) => {
@@ -280,6 +310,22 @@
     }, 530);
 
     function showError(message) {
+        // If message contains field-specific errors (format: "field: msg; field2: msg"), show inline
+        if (message && message.includes(':')) {
+            const parts = message.split(';').map(p => p.trim()).filter(Boolean);
+            const errors = {};
+            parts.forEach(part => {
+                const [key, ...rest] = part.split(':');
+                if (key && rest.length) {
+                    errors[key.trim()] = rest.join(':').trim();
+                }
+            });
+            if (Object.keys(errors).length) {
+                showFieldErrors(errors);
+                return;
+            }
+        }
+
         errorMessage.textContent = message;
         errorAlert.classList.remove('d-none');
     }
@@ -341,6 +387,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
                 },
                 body: JSON.stringify(formData)
             });

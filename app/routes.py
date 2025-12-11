@@ -17,6 +17,7 @@ from flask import Blueprint, render_template, request, Response, stream_with_con
 # Import our service modules (the business logic)
 from .services.openai_client import check_api_key_configured
 from .services.dixer_service import generate_dixer_stream
+from .forms import DixerForm
 
 # Create a Blueprint - a way to organize related routes
 # Think of it like a mini-application within our main Flask app
@@ -102,16 +103,9 @@ def government_question_writer():
   Returns:
     str: Rendered HTML for the dixer writer page
   """
-  # Provide default form values
-  form_data = {
-    'word_count': 200,
-    'topic': '',
-    'member_name': '',
-    'electorate': '',
-    'strategy': 'option_a',
-    'model': 'anthropic/claude-sonnet-4.5'
-  }
-  return render_template('government_question_writer.html', form_data=form_data, active_page='government_question_writer')
+  # Instantiate WTForms form (provides CSRF token + defaults)
+  form = DixerForm()
+  return render_template('government_question_writer.html', form=form, active_page='government_question_writer')
 
 
 @bp.route('/government-question-writer/stream', methods=['POST'])
@@ -135,26 +129,43 @@ def government_question_writer_stream():
   - The browser can display each "chunk" as it arrives
   - This is how ChatGPT shows responses appearing word-by-word
   """
-  # Get the JSON data sent by the frontend JavaScript
-  # request.get_json() parses JSON into a Python dictionary
-  data = request.get_json()
+  # Accept either JSON (AJAX) or regular form submissions (WTForms)
+  data = None
+  form = DixerForm()
 
-  # Extract all the parameters from the JSON
-  # .get() safely gets a value, returning a default if the key doesn't exist
-  word_count = int(data.get('word_count', 200))
-  topic = data.get('topic', '').strip()
-  member_name = data.get('member_name', '').strip()
-  electorate = data.get('electorate', '').strip()
-  strategy = data.get('strategy', 'option_a')
-  model = data.get('model', 'anthropic/claude-sonnet-4.5')
+  if request.is_json:
+    data = request.get_json()
+    word_count = int(data.get('word_count', 200))
+    topic = data.get('topic', '').strip()
+    member_name = data.get('member_name', '').strip()
+    electorate = data.get('electorate', '').strip()
+    strategy = data.get('strategy', 'option_a')
+    model = data.get('model', 'anthropic/claude-sonnet-4.5')
 
-  # Validate required fields
-  if not topic:
-    # Return an error event in SSE format
-    return Response(
-      f"data: {{'error': 'Please provide a topic or announcement.'}}\n\n",
-      mimetype='text/event-stream'
-    )
+    if not topic:
+      return Response(
+        f"data: {{'error': 'Please provide a topic or announcement.'}}\n\n",
+        mimetype='text/event-stream'
+      )
+  else:
+    # Validate WTForms submission (includes CSRF check)
+    if not form.validate_on_submit():
+      # Build a friendly error message from form errors
+      errors = []
+      for field, msgs in form.errors.items():
+        errors.append(f"{field}: {', '.join(msgs)}")
+      error_msg = '; '.join(errors) or 'Invalid form submission.'
+      return Response(
+        f"data: {{'error': '{error_msg}'}}\n\n",
+        mimetype='text/event-stream'
+      )
+
+    word_count = int(form.word_count.data or 200)
+    topic = (form.topic.data or '').strip()
+    member_name = (form.member_name.data or '').strip()
+    electorate = (form.electorate.data or '').strip()
+    strategy = form.strategy.data or 'option_a'
+    model = form.model.data or 'anthropic/claude-sonnet-4.5'
 
   if not check_api_key_configured():
     return Response(
