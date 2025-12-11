@@ -30,6 +30,7 @@
 - **Framework:** Flask 3.1.2+
 - **Python Version:** 3.14+
 - **Package Manager:** UV (modern alternative to pip/poetry)
+- **Production Server:** Gunicorn 23.0.0+ (WSGI server for production)
 - **Template Engine:** Jinja2 (Flask default)
 - **Frontend:** Bootstrap 5.3.2 (CDN), Bootstrap Icons 1.11.1 (CDN)
 - **Frontend Build Tools:**
@@ -40,7 +41,8 @@
   - **Types:** @types/bootstrap for Bootstrap 5
 - **AI API:** OpenRouter (via OpenAI SDK 2.9.0+)
 - **Configuration:** python-dotenv for environment variables
- - **Forms & CSRF:** Uses Flask-WTF / WTForms for server-side form validation and CSRF protection (see app/forms.py)
+- **Forms & CSRF:** Uses Flask-WTF / WTForms for server-side form validation and CSRF protection (see app/forms.py)
+- **Deployment:** Google Cloud Run (serverless containers)
 
 ### Database & Persistence
 **NONE** - Application is currently stateless. All data is ephemeral (exists only during request lifecycle).
@@ -205,17 +207,49 @@ uv run pyright
 1. **Database Layer:** No persistence - consider SQLAlchemy + PostgreSQL/SQLite
 2. **Authentication:** No user management - consider Flask-Login
 3. **Testing:** No test coverage - add pytest + pytest-flask
-4. **WSGI Server:** Development server only - add Gunicorn/uWSGI for production
-5. **Error Logging:** Basic Flask logging - consider structured logging (Loguru, Python logging)
-6. **Rate Limiting:** No API protection - consider Flask-Limiter
-8. **Environment-Based Config:** Hardcoded values - create proper config classes
+4. **Error Logging:** Basic Flask logging - consider structured logging (Loguru, Python logging)
+5. **Rate Limiting:** No API protection - consider Flask-Limiter
+6. **Environment-Based Config:** Hardcoded values - create proper config classes
+7. **Caching:** No response caching - consider Flask-Caching or Redis for OpenRouter responses
 
 ### Known Technical Debt
-- Secret key hardcoded in `app/__init__.py` (line with SECRET_KEY)
 - No database models despite application needing to persist dixers
 - No user authentication/authorization
 - No caching layer (consider Flask-Caching for OpenRouter responses)
 - No monitoring/observability (APM, error tracking)
+
+---
+
+## Deployment
+
+### Google Cloud Run (Production)
+
+The application is configured for deployment on Google Cloud Run, a fully managed serverless platform. See **[DEPLOY.md](./DEPLOY.md)** for comprehensive deployment instructions.
+
+**Quick Deploy:**
+```bash
+# Build frontend
+cd frontend && pnpm install && pnpm run build:prod && cd ..
+
+# Deploy to Cloud Run (Sydney region)
+gcloud run deploy collins-gpt \
+  --source . \
+  --platform managed \
+  --region australia-southeast1 \
+  --allow-unauthenticated \
+  --set-env-vars OPENROUTER_API_KEY="your-api-key" \
+  --set-env-vars SECRET_KEY="your-secret-key"
+```
+
+**Key Files:**
+- `Dockerfile` - Multi-stage build (frontend + Python with Gunicorn)
+- `.dockerignore` - Excludes unnecessary files from Docker build
+- `DEPLOY.md` - Complete deployment guide with Secret Manager, CI/CD, monitoring
+
+**Production Requirements:**
+- Gunicorn WSGI server (configured in Dockerfile)
+- Environment variables: `OPENROUTER_API_KEY`, `SECRET_KEY`, `PORT` (auto-set by Cloud Run)
+- Pre-built frontend assets in `app/static/dist/`
 
 ---
 
