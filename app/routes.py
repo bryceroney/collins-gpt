@@ -66,12 +66,12 @@ def index():
   # This is a list of dictionaries - each dict represents one module card
   modules = [
     {
-      "id": "dixer-writer",
-      "title": "Question Time Dixer Writer",
-      "description": "Generates friendly constituency questions for backbenchers to ask during Question Time.",
+      "id": "government-question-writer",
+      "title": "Government Question Writer",
+      "description": "Generates questions for Government MPs to ask during Question Time.",
       "icon": "bi-mic-fill",
       "color": "primary",
-      "url": "main.dixer_writer"  # Points to the dixer_writer function below
+      "url": "main.government_question_writer"  # Points to the government_question_writer function below
     },
     {
       "id": "hot-issues",
@@ -92,8 +92,8 @@ def index():
   )
 
 
-@bp.route('/dixer-writer')
-def dixer_writer():
+@bp.route('/government-question-writer')
+def government_question_writer():
   """
   Display the Dixer Writer page.
 
@@ -110,11 +110,11 @@ def dixer_writer():
     'electorate': '',
     'strategy': 'option_a'
   }
-  return render_template('dixer_writer.html', form_data=form_data, active_page='dixer_writer')
+  return render_template('government_question_writer.html', form_data=form_data, active_page='government_question_writer')
 
 
-@bp.route('/dixer-writer/stream', methods=['POST'])
-def dixer_writer_stream():
+@bp.route('/government-question-writer/stream', methods=['POST'])
+def government_question_writer_stream():
   """
   Handle streaming generation of Dixers.
 
