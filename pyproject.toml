@@ -8,3 +8,8 @@ dependencies = [
     "openai>=2.9.0",
     "python-dotenv>=1.2.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.407",
+]

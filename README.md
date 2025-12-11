@@ -126,6 +126,68 @@ Update the secret key in `app/__init__.py`.
 
 ## Development
 
+### Code Quality and Type Checking
+
+This project is configured with Pylance for type checking and style validation in VSCode. To run these checks from the command line, use `pyright` (the command-line version of Pylance):
+
+#### Install Pyright
+
+```bash
+# Using npm (requires Node.js)
+npm install -g pyright
+
+# Or using uv to add it as a dev dependency
+uv add --dev pyright
+```
+
+#### Run Type Checks
+
+```bash
+# Run pyright on the entire project
+pyright
+
+# Run on specific files or directories
+pyright app/
+pyright app/routes.py
+
+# Run with verbose output
+pyright --verbose
+
+# Generate a detailed report
+pyright --outputjson
+```
+
+#### Configuration
+
+The project uses the VSCode settings in `.vscode/settings.json` for type checking configuration:
+- Type checking mode: `basic`
+- Diagnostic mode: `workspace`
+- Unused imports/variables: `information` level
+- Type issues: `warning` level
+
+You can also create a `pyrightconfig.json` in the project root for more granular command-line control:
+
+```json
+{
+  "typeCheckingMode": "basic",
+  "reportUnusedImport": "information",
+  "reportUnusedVariable": "information",
+  "reportGeneralTypeIssues": "warning",
+  "pythonVersion": "3.14",
+  "pythonPlatform": "Linux",
+  "venvPath": ".",
+  "venv": ".venv"
+}
+```
+
+#### VSCode Integration
+
+The project is configured with:
+- 2-space indentation for all Python files
+- Format on save
+- Auto-organize imports on save
+- Pylance language server with type checking enabled
+
 ### Adding New Routes
 
 1. Add routes to `app/routes.py`:
