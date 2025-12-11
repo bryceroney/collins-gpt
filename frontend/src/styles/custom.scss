@@ -1,0 +1,213 @@
+/* Custom SCSS for CollinsGPT */
+
+// Variables
+$labor-red: #e11b22;
+$labor-red-hover: #c4171e;
+$labor-red-active: #a91419;
+$labor-red-light: rgba(225, 27, 34, 0.1);
+
+$shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+$shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+$shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+
+// CSS Custom Properties (for runtime usage)
+:root {
+  --shadow-sm: #{$shadow-sm};
+  --shadow: #{$shadow};
+  --shadow-lg: #{$shadow-lg};
+  --labor-red: #{$labor-red};
+  --labor-red-hover: #{$labor-red-hover};
+  --labor-red-light: #{$labor-red-light};
+}
+
+// Labor Red Components
+.btn-labor {
+  background-color: $labor-red;
+  border-color: $labor-red;
+  color: #fff;
+
+  &:hover,
+  &:focus {
+    background-color: $labor-red-hover;
+    border-color: $labor-red-hover;
+    color: #fff;
+  }
+
+  &:active {
+    background-color: $labor-red-active !important;
+    border-color: $labor-red-active !important;
+  }
+}
+
+.text-labor {
+  color: $labor-red !important;
+}
+
+.bg-labor {
+  background-color: $labor-red !important;
+}
+
+.bg-labor-light {
+  background-color: $labor-red-light !important;
+}
+
+.active-labor {
+  background-color: $labor-red !important;
+  color: #fff !important;
+}
+
+// Module Cards
+.module-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
+  }
+}
+
+// Sidebar
+#sidebar {
+  transition: all 0.3s ease;
+
+  .nav-link {
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+
+    &:hover:not(.active-labor) {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff !important;
+    }
+  }
+}
+
+// Form Controls
+.form-control:focus {
+  box-shadow: none;
+}
+
+// Global Layout
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+// Card Effects
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: $shadow-lg;
+  }
+
+  &.border-0.shadow-sm:not(.module-card) {
+    transform: none;
+
+    &:hover {
+      transform: none;
+      box-shadow: $shadow-sm;
+    }
+  }
+}
+
+// Button Effects
+.btn {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow;
+  }
+}
+
+// Footer
+footer {
+  margin-top: auto;
+
+  a {
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+// Streaming Components
+.stream-output {
+  max-height: 400px;
+  overflow-y: auto;
+  line-height: 1.7;
+}
+
+.typing-cursor {
+  display: inline-block;
+  color: $labor-red;
+  font-weight: bold;
+  animation: blink 1s step-end infinite;
+}
+
+// Progress & Spinners
+.progress-bar.bg-labor {
+  background-color: $labor-red !important;
+}
+
+.spinner-grow.text-labor,
+.spinner-border.text-labor {
+  color: $labor-red !important;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+
+  .lead {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 992px) {
+  #sidebar {
+    width: 200px !important;
+  }
+
+  main {
+    margin-left: 200px !important;
+  }
+}

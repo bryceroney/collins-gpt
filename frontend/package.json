@@ -1,0 +1,28 @@
+{
+  "name": "collins-gpt-frontend",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Frontend for Collins-GPT",
+  "scripts": {
+    "dev": "concurrently -n \"flask,vite\" -c \"blue,green\" \"pnpm:dev:flask\" \"pnpm:dev:vite\"",
+    "dev:flask": "cd .. && FLASK_ENV=development uv run python main.py",
+    "dev:vite": "vite",
+    "build": "tsc && vite build",
+    "build:prod": "tsc && vite build --mode production",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf ../app/static/dist"
+  },
+  "keywords": ["typescript", "vite", "flask"],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.25.0",
+  "devDependencies": {
+    "@types/bootstrap": "^5.2.10",
+    "@types/node": "^25.0.0",
+    "concurrently": "^9.2.1",
+    "sass": "^1.96.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7"
+  }
+}

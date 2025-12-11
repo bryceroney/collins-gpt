@@ -62,3 +62,9 @@ htmlcov/
 
 # UV lock file (optional - remove this line if you want to commit the lock file)
 # uv.lock
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+app/static/dist/

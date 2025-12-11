@@ -1,6 +1,8 @@
 # CLAUDE.md - AI Agent Reference Guide
 
-**⚠️ CRITICAL INSTRUCTION: If you change the system architecture, add new major libraries, refactor the folder structure, or modify core design patterns, you MUST update this CLAUDE.md file to keep it current. This is the source of truth for all AI agents working on this codebase.**
+## ⚠️ CRITICAL INSTRUCTIONS:
+- If you change the system architecture, add new major libraries, refactor the folder structure, or modify core design patterns, you MUST update this CLAUDE.md file to keep it current. This is the source of truth for all AI agents working on this codebase.
+- Always use context7 when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 
 ---
 
@@ -29,7 +31,13 @@
 - **Python Version:** 3.14+
 - **Package Manager:** UV (modern alternative to pip/poetry)
 - **Template Engine:** Jinja2 (Flask default)
-- **Frontend:** Bootstrap 5.3.2, Bootstrap Icons 1.11.1, Vanilla JavaScript
+- **Frontend:** Bootstrap 5.3.2 (CDN), Bootstrap Icons 1.11.1 (CDN)
+- **Frontend Build Tools:**
+  - **TypeScript:** 5.x+ (type-safe JavaScript)
+  - **Vite:** 7.x+ (build tool with HMR)
+  - **Package Manager:** pnpm (fast, disk-efficient)
+  - **CSS Preprocessor:** SCSS/Sass
+  - **Types:** @types/bootstrap for Bootstrap 5
 - **AI API:** OpenRouter (via OpenAI SDK 2.9.0+)
 - **Configuration:** python-dotenv for environment variables
  - **Forms & CSRF:** Uses Flask-WTF / WTForms for server-side form validation and CSRF protection (see app/forms.py)
@@ -47,10 +55,34 @@
   - ⚠️ **TODO:** Ensure `SECRET_KEY` is set in `.env` or environment for production deployments
 
 ### Frontend Architecture
-- **CSS Framework:** Bootstrap 5 (CDN)
-- **Custom Styles:** `static/css/custom.css` (Labor Party red branding: #e11b22)
-- **JavaScript:** `static/js/custom.js` (Bootstrap init, utilities, no build process)
-- **AJAX Pattern:** Fetch API with Server-Sent Events (SSE) for streaming responses
+
+**Source Location:** `frontend/src/` (TypeScript source files)
+**Build Output:** `app/static/dist/` (production bundles, gitignored in dev)
+
+**Module Organization:**
+- **`main.ts`:** Entry point, initializes global modules
+- **`modules/`:** Reusable UI modules (Bootstrap init, toasts, animations, smooth scrolling)
+- **`pages/`:** Page-specific logic (government question writer with SSE streaming)
+- **`types/`:** TypeScript type definitions (app types, Bootstrap types)
+- **`styles/`:** SCSS files (Labor Party branding: #e11b22)
+
+**Build Pipeline:**
+1. TypeScript compiles to ES modules
+2. Vite bundles and minifies (with tree-shaking)
+3. SCSS compiles to CSS and is extracted/minified
+4. Output to `app/static/dist/assets/` with content hashes
+
+**Development Mode:**
+- Vite dev server runs on `localhost:5173` with HMR
+- Flask backend runs on `localhost:5000`
+- Vite proxies API requests to Flask
+- Templates load unbundled modules from Vite dev server via `vite_asset()` helper
+
+**Production Mode:**
+- Pre-build frontend: `cd frontend && pnpm run build:prod`
+- Flask templates load hashed assets via `vite_asset()` helper
+- Manifest file (`dist/.vite/manifest.json`) maps source paths to hashed filenames
+- Bootstrap loaded from CDN (not bundled)
 
 ---
 
@@ -83,6 +115,27 @@ uv run main.py
 export FLASK_APP=app
 export FLASK_ENV=development
 flask run
+```
+
+### Frontend Development
+```bash
+# Install frontend dependencies
+cd frontend && pnpm install
+
+# Run development servers (Flask + Vite) - RECOMMENDED
+cd frontend && pnpm run dev
+
+# Run Vite dev server only (requires Flask running separately)
+cd frontend && pnpm run dev:vite
+
+# Build for production
+cd frontend && pnpm run build:prod
+
+# Type check TypeScript
+cd frontend && pnpm run type-check
+
+# Clean build output
+cd frontend && pnpm run clean
 ```
 
 ### Testing
@@ -180,7 +233,8 @@ uv run pyright
 1. **Service First:** Create/modify service in `app/services/`
 2. **Route Second:** Add route in `app/routes.py` that calls service
 3. **Template Last:** Create/modify template in `app/templates/`
-4. **Static Assets:** Add CSS/JS to `app/static/` if needed
+4. **Frontend:** Add TypeScript modules to `frontend/src/modules/` or page-specific code to `frontend/src/pages/`
+5. **Styling:** Add SCSS to `frontend/src/styles/custom.scss` or create new SCSS files
 
 ### Adding Dependencies
 ```bash
@@ -241,18 +295,19 @@ python main.py
 7. **Update CLAUDE.md** - If you change core architecture, update this file
 
 ### Common Tasks
-- **Add a new page:** Create route in `routes.py`, service in `services/`, template in `templates/`
+- **Add a new page:** Create route in `routes.py`, service in `services/`, template in `templates/`, TypeScript module in `frontend/src/pages/`
 - **Add AI feature:** Extend `dixer_service.py` or create new service, use OpenRouter client pattern
-- **Add styling:** Extend `static/css/custom.css`, maintain Labor Party red theme (#e11b22)
-- **Add JavaScript:** Extend `static/js/custom.js`, use vanilla JS (no frameworks)
+- **Add styling:** Extend `frontend/src/styles/custom.scss`, maintain Labor Party red theme (#e11b22)
+- **Add JavaScript:** Create TypeScript modules in `frontend/src/modules/` or page-specific code in `frontend/src/pages/`
 
 ### What NOT to Do
 - ❌ Don't add database code (no ORM configured yet)
 - ❌ Don't add authentication (not implemented yet)
 - ❌ Don't commit `.env` file (contains API keys)
 - ❌ Don't put business logic in routes (use services)
-- ❌ Don't use pip/poetry (this project uses UV)
-- ❌ Don't add frontend build tools (keep it simple, no webpack/vite)
+- ❌ Don't use pip/poetry for Python (this project uses UV)
+- ❌ Don't use npm/yarn for frontend (this project uses pnpm)
+- ❌ Don't add inline scripts to templates (use TypeScript modules)
 
 ---
 

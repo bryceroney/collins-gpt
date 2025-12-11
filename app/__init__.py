@@ -24,4 +24,11 @@ def create_app():
   from app import routes
   app.register_blueprint(routes.bp)
 
+  # Register Vite helpers for templates
+  from app.vite_helpers import vite_asset, vite_hmr_client
+  app.jinja_env.globals.update({
+    'vite_asset': vite_asset,
+    'vite_hmr_client': vite_hmr_client,
+  })
+
   return app
