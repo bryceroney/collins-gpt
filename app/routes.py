@@ -87,7 +87,8 @@ def index():
   return render_template(
     'dashboard.html',
     greeting=get_greeting(),
-    modules=modules
+    modules=modules,
+    active_page='dashboard'
   )
 
 
@@ -109,7 +110,7 @@ def dixer_writer():
     'electorate': '',
     'strategy': 'option_a'
   }
-  return render_template('dixer_writer.html', form_data=form_data)
+  return render_template('dixer_writer.html', form_data=form_data, active_page='dixer_writer')
 
 
 @bp.route('/dixer-writer/stream', methods=['POST'])
