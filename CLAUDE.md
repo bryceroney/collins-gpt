@@ -226,19 +226,29 @@ uv run pyright
 
 The application is configured for deployment on Google Cloud Run, a fully managed serverless platform. See **[DEPLOY.md](./DEPLOY.md)** for comprehensive deployment instructions.
 
-**Quick Deploy:**
+**Quick Deploy (with Secret Manager):**
 ```bash
-# Build frontend
+# 1. Create secrets
+echo -n "your-api-key" | gcloud secrets create openrouter-api-key --data-file=-
+python -c "import secrets; print(secrets.token_hex(32), end='')" | gcloud secrets create flask-secret-key --data-file=-
+
+# 2. Build frontend
 cd frontend && pnpm install && pnpm run build:prod && cd ..
 
-# Deploy to Cloud Run (Sydney region)
+# 3. Deploy to Cloud Run (Sydney region, cost-optimized)
 gcloud run deploy collins-gpt \
   --source . \
   --platform managed \
   --region australia-southeast1 \
   --allow-unauthenticated \
-  --set-env-vars OPENROUTER_API_KEY="your-api-key" \
-  --set-env-vars SECRET_KEY="your-secret-key"
+  --set-secrets OPENROUTER_API_KEY=openrouter-api-key:latest \
+  --set-secrets SECRET_KEY=flask-secret-key:latest \
+  --memory 256Mi \
+  --cpu 1 \
+  --min-instances 0 \
+  --max-instances 10 \
+  --timeout 300 \
+  --cpu-throttling
 ```
 
 **Key Files:**
@@ -248,8 +258,11 @@ gcloud run deploy collins-gpt \
 
 **Production Requirements:**
 - Gunicorn WSGI server (configured in Dockerfile)
-- Environment variables: `OPENROUTER_API_KEY`, `SECRET_KEY`, `PORT` (auto-set by Cloud Run)
+- Google Secret Manager with secrets: `openrouter-api-key`, `flask-secret-key`
 - Pre-built frontend assets in `app/static/dist/`
+- Cost-optimized settings: 256Mi RAM, scale-to-zero, CPU throttling
+
+**Expected Cost:** Likely **free** under Cloud Run's generous free tier (2M requests/month). Even with moderate traffic, typically under $5/month.
 
 ---
 
