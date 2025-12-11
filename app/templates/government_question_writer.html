@@ -126,6 +126,28 @@
                         </div>
                     </div>
 
+                    <!-- AI Model -->
+                    <div class="mb-4">
+                        <label for="model" class="form-label fw-semibold">
+                            AI Model <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-sm" id="model" name="model" required>
+                            <option value="anthropic/claude-sonnet-4.5" {% if form_data.get('model', 'anthropic/claude-sonnet-4.5') == 'anthropic/claude-sonnet-4.5' %}selected{% endif %}>
+                                Claude Sonnet 4.5
+                            </option>
+                            <option value="google/gemini-2.5-flash" {% if form_data.get('model') == 'google/gemini-2.5-flash' %}selected{% endif %}>
+                                Gemini 2.5 Flash
+                            </option>
+                            <option value="openai/gpt-5-mini" {% if form_data.get('model') == 'openai/gpt-5-mini' %}selected{% endif %}>
+                                GPT-5 Mini
+                            </option>
+                            <option value="openai/gpt-5.1" {% if form_data.get('model') == 'openai/gpt-5.1' %}selected{% endif %}>
+                                GPT-5.1
+                            </option>
+                        </select>
+                        <div class="form-text">Test different AI models to compare output quality.</div>
+                    </div>
+
                     <!-- Submit Button -->
                     <button type="submit" id="submit-btn" class="btn btn-labor w-100 py-2">
                         <span id="btn-text"><i class="bi bi-magic me-2"></i>Generate Dixer</span>
@@ -194,10 +216,18 @@
             <!-- Answer Card -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-success text-white py-3">
-                    <h5 class="mb-0 fw-semibold">
-                        <i class="bi bi-chat-right-quote-fill me-2"></i>The Answer
-                    </h5>
-                    <small class="opacity-75">Minister Collins' Response</small>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-0 fw-semibold">
+                                <i class="bi bi-chat-right-quote-fill me-2"></i>The Answer
+                            </h5>
+                            <small class="opacity-75">Minister Collins' Response</small>
+                        </div>
+                        <div class="text-end">
+                            <small class="opacity-75 d-block">Word Count</small>
+                            <span id="answer-word-count" class="badge bg-white text-success fw-bold fs-6">0</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-4">
                     <div id="answer-text" class="answer-text" style="white-space: pre-line;"></div>
@@ -276,11 +306,20 @@
         }
     }
 
+    function countWords(text) {
+        // Count words by splitting on whitespace and filtering empty strings
+        return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
     function showResult(question, answer) {
         loadingState.classList.add('d-none');
         resultState.classList.remove('d-none');
         document.getElementById('question-text').textContent = question;
         document.getElementById('answer-text').textContent = answer;
+
+        // Calculate and display word count
+        const wordCount = countWords(answer);
+        document.getElementById('answer-word-count').textContent = wordCount;
     }
 
     form.addEventListener('submit', async (e) => {
@@ -293,7 +332,8 @@
             topic: document.getElementById('topic').value,
             member_name: document.getElementById('member_name').value,
             electorate: document.getElementById('electorate').value,
-            strategy: document.getElementById('strategy').value
+            strategy: document.getElementById('strategy').value,
+            model: document.getElementById('model').value
         };
 
         try {

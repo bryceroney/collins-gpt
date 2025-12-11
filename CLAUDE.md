@@ -55,8 +55,8 @@ pyproject.toml              # UV dependency configuration
 | Method | Path | Function | Purpose |
 |--------|------|----------|---------|
 | GET | `/` | `index()` | Dashboard/home page |
-| GET | `/dixer-writer` | `dixer_writer()` | Dixer generation form |
-| POST | `/dixer-writer/stream` | `dixer_writer_stream()` | Server-Sent Events (SSE) streaming endpoint for AI generation |
+| GET | `/government-question-writer` | `government_question_writer()` | Dixer generation form |
+| POST | `/government-question-writer/stream` | `government_question_writer_stream()` | Server-Sent Events (SSE) streaming endpoint for AI generation |
 
 ### Services Architecture
 **Services are framework-agnostic** - No Flask dependencies, pure Python business logic:

@@ -230,7 +230,8 @@ def generate_dixer_stream(
   word_count: int,
   strategy: str = "option_a",
   member_name: Optional[str] = None,
-  electorate: Optional[str] = None
+  electorate: Optional[str] = None,
+  model: str = "anthropic/claude-sonnet-4.5"
 ) -> Generator[str, None, None]:
   """
   Generate a Dixer with streaming (word-by-word) response.
@@ -245,6 +246,7 @@ def generate_dixer_stream(
     strategy (str): "option_a" (positive) or "option_b" (attack).
     member_name (Optional[str]): Name of the MP (optional).
     electorate (Optional[str]): The MP's electorate (optional).
+    model (str): The AI model to use (default: "anthropic/claude-sonnet-4.5").
 
   Yields:
     str: Server-Sent Event (SSE) formatted strings, each containing
@@ -279,7 +281,7 @@ def generate_dixer_stream(
     # Make the streaming API call
     # Note: stream=True means we get results piece by piece
     stream = client.chat.completions.create(
-      model="anthropic/claude-sonnet-4",
+      model=model,
       messages=[
         {"role": "system", "content": DIXER_SYSTEM_PROMPT},
         {"role": "user", "content": user_prompt}

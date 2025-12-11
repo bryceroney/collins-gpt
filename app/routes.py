@@ -108,7 +108,8 @@ def government_question_writer():
     'topic': '',
     'member_name': '',
     'electorate': '',
-    'strategy': 'option_a'
+    'strategy': 'option_a',
+    'model': 'anthropic/claude-sonnet-4.5'
   }
   return render_template('government_question_writer.html', form_data=form_data, active_page='government_question_writer')
 
@@ -145,6 +146,7 @@ def government_question_writer_stream():
   member_name = data.get('member_name', '').strip()
   electorate = data.get('electorate', '').strip()
   strategy = data.get('strategy', 'option_a')
+  model = data.get('model', 'anthropic/claude-sonnet-4.5')
 
   # Validate required fields
   if not topic:
@@ -167,7 +169,8 @@ def government_question_writer_stream():
     word_count=word_count,
     strategy=strategy,
     member_name=member_name if member_name else None,
-    electorate=electorate if electorate else None
+    electorate=electorate if electorate else None,
+    model=model
   )
 
   # Return the stream as a Response
