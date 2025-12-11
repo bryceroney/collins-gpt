@@ -16,7 +16,7 @@ from flask import Blueprint, render_template, request, Response, stream_with_con
 
 # Import our service modules (the business logic)
 from .services.openai_client import check_api_key_configured
-from .services.dixer_service import generate_dixer, generate_dixer_stream
+from .services.dixer_service import generate_dixer_stream
 
 # Create a Blueprint - a way to organize related routes
 # Think of it like a mini-application within our main Flask app
@@ -91,31 +91,17 @@ def index():
   )
 
 
-@bp.route('/dixer-writer', methods=['GET', 'POST'])
+@bp.route('/dixer-writer')
 def dixer_writer():
   """
-  Handle the Dixer Writer tool page.
+  Display the Dixer Writer page.
 
-  This route serves two purposes:
-  - GET: Display the form (when user first visits the page)
-  - POST: Process the form submission (when user clicks "Generate")
-
-  Note: This is the non-streaming version. Most users will use the streaming
-  version instead (see dixer_writer_stream below).
+  This shows the form where users can input details to generate a Dorothy Dixer.
 
   Returns:
     str: Rendered HTML for the dixer writer page
-
-  For Python beginners:
-  - methods=['GET', 'POST'] means this route accepts both types of requests
-  - GET is for viewing a page, POST is for submitting data
-  - request.method tells us which type of request this is
   """
-  # Initialize variables for the template
-  result = None  # Will hold the AI-generated question/answer
-  error = None   # Will hold any error messages
-
-  # Default form values (used when displaying the empty form)
+  # Provide default form values
   form_data = {
     'word_count': 200,
     'topic': '',
@@ -123,47 +109,7 @@ def dixer_writer():
     'electorate': '',
     'strategy': 'option_a'
   }
-
-  # Check if this is a form submission (POST request)
-  if request.method == 'POST':
-    # Capture the data the user submitted
-    # request.form is a dictionary-like object with the form data
-    form_data = {
-      'word_count': int(request.form.get('word_count', 200)),
-      'topic': request.form.get('topic', '').strip(),
-      'member_name': request.form.get('member_name', '').strip(),
-      'electorate': request.form.get('electorate', '').strip(),
-      'strategy': request.form.get('strategy', 'option_a')
-    }
-
-    # Validate the input - topic is required
-    if not form_data['topic']:
-      error = "Please provide a topic or announcement."
-    elif not check_api_key_configured():
-      error = "OpenRouter API key not configured. Please set OPENROUTER_API_KEY environment variable."
-    else:
-      # All validation passed - generate the dixer!
-      try:
-        # Call our service function to generate the content
-        result = generate_dixer(
-          topic=form_data['topic'],
-          word_count=form_data['word_count'],
-          strategy=form_data['strategy'],
-          member_name=form_data['member_name'] if form_data['member_name'] else None,
-          electorate=form_data['electorate'] if form_data['electorate'] else None
-        )
-      except Exception as e:
-        # If anything goes wrong, capture the error message
-        error = f"Error generating response: {str(e)}"
-
-  # Render the template with our data
-  # The template will show either the form, the results, or an error
-  return render_template(
-    'dixer_writer.html',
-    result=result,
-    error=error,
-    form_data=form_data
-  )
+  return render_template('dixer_writer.html', form_data=form_data)
 
 
 @bp.route('/dixer-writer/stream', methods=['POST'])
