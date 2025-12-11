@@ -1,28 +1,11 @@
-"""
-Dixer Writer Service
-
-This module contains all the business logic for generating parliamentary "Dorothy Dixer"
-questions and answers using AI.
-
-What is a Dorothy Dixer?
-A "Dorothy Dixer" is a pre-arranged question asked in parliament that allows the
-government to showcase their policies. It's called "friendly" because it's designed
-to make the Minister look good.
-
-For Python beginners:
-- This is a "service" module - it contains the core business logic of our application
-- We separate this from routes.py to keep our code organized and testable
-- Each function has a single, well-defined purpose
-"""
-
 import json
-from typing import Dict, Generator, Optional
+from typing import Dict, Generator
 from .openai_client import get_openai_client
 
 
 # System Prompt - This tells the AI how to behave and what rules to follow
 # It's like giving instructions to a speechwriter about the style and format
-DIXER_SYSTEM_PROMPT = """You are an expert parliamentary speechwriter for the Australian Federal Government. Your task is to draft 'Dorothy Dixer' questions and ministerial answers following strict style guidelines.
+government_question_SYSTEM_PROMPT = """You are an expert parliamentary speechwriter for the Australian Federal Government. Your task is to draft 'Dorothy Dixer' questions and ministerial answers following strict style guidelines.
 
 ### Guidance for Drafting 'Dorothy Dixer' Questions and Answers
 **Model: Friendly Government Question & Minister Collins Style Response**
@@ -74,8 +57,7 @@ def build_user_prompt(
   topic: str,
   word_count: int,
   strategy: str = "option_a",
-  member_name: Optional[str] = None,
-  electorate: Optional[str] = None
+  other_instructions: str = ""
 ) -> str:
   """
   Build the user prompt that will be sent to the AI.
@@ -88,10 +70,6 @@ def build_user_prompt(
     word_count (int): Target number of words for the answer.
     strategy (str): Either "option_a" (positive) or "option_b" (attack).
            Defaults to "option_a".
-    member_name (Optional[str]): Name of the MP asking the question.
-                  Optional - can be None.
-    electorate (Optional[str]): The MP's electorate.
-                 Optional - can be None.
 
   Returns:
     str: A formatted prompt ready to send to the AI.
@@ -109,20 +87,8 @@ def build_user_prompt(
     else "Option B: Contrast (Attack)"
   )
 
-  # Handle personalization vs placeholder
-  # If we have member details, personalize. Otherwise, use placeholder.
-  if member_name and electorate:
-    member_info = f"""**Member Asking:** {member_name}
+  other_instructions_text = "" if not other_instructions else f"\n\n**Additional Instructions:** {other_instructions}"
 
-**Member's Electorate:** {electorate}
-
-Please personalise the answer with specific praise for this member and their electorate."""
-  else:
-    member_info = """**Member Asking:** Not specified
-
-**Member's Electorate:** Not specified
-
-Since the member is not specified, use placeholder text in the answer opening: "I want to thank the member for [ELECTORATE] for their question." Keep the brackets as a placeholder to be filled in later."""
 
   # Build the final prompt using an f-string
   # The triple quotes let us write multi-line strings
@@ -130,18 +96,18 @@ Since the member is not specified, use placeholder text in the answer opening: "
 
 **Topic/Announcement:** {topic}
 
-{member_info}
-
 **Strategy:** {strategy_text}
 
-**Target Answer Length:** Approximately {word_count} words for the answer (the question can be shorter, but aim for around {word_count} words in the Minister's answer).
+**Target Answer Length:** Approximately {word_count} words for the answer (the question can be shorter, but aim for around {word_count} words in the Minister's answer, do NOT go over).
+
+{other_instructions_text}
 
 Generate a parliamentary question following the {strategy_text.split(':')[0]} structure, and a Minister Collins-style answer."""
 
   return user_prompt
 
 
-def parse_dixer_response(response_text: str) -> Dict[str, str]:
+def parse_government_question_response(response_text: str) -> Dict[str, str]:
   """
   Parse the AI's response into separate question and answer sections.
 
@@ -225,27 +191,20 @@ def calculate_max_tokens(word_count: int) -> int:
   return min(word_count * 2 + 500, 4000)
 
 
-def generate_dixer_stream(
+def generate_government_question_stream(
   topic: str,
   word_count: int,
   strategy: str = "option_a",
-  member_name: Optional[str] = None,
-  electorate: Optional[str] = None,
+  other_instructions: str = "",
   model: str = "anthropic/claude-sonnet-4.5"
 ) -> Generator[str, None, None]:
   """
-  Generate a Dixer with streaming (word-by-word) response.
-
-  This is similar to generate_dixer() but returns results incrementally
-  as the AI generates them, instead of waiting for the complete response.
-  This provides a better user experience for long responses.
+  Generate a Government Question with streaming (word-by-word) response.
 
   Args:
     topic (str): The policy topic or announcement.
     word_count (int): Target word count for the answer.
     strategy (str): "option_a" (positive) or "option_b" (attack).
-    member_name (Optional[str]): Name of the MP (optional).
-    electorate (Optional[str]): The MP's electorate (optional).
     model (str): The AI model to use (default: "anthropic/claude-sonnet-4.5").
 
   Yields:
@@ -255,12 +214,6 @@ def generate_dixer_stream(
       - {"done": true, "question": "...", "answer": "..."} when complete
       - {"error": "message"} if something goes wrong
 
-  For Python beginners:
-  - Generator[str, None, None] means this function yields (returns)
-   multiple strings over time, not just one
-  - 'yield' is like 'return' but the function continues running
-  - This is useful for streaming data as it becomes available
-  - Generators are memory-efficient for large amounts of data
   """
   try:
     # Get the configured AI client
@@ -270,9 +223,8 @@ def generate_dixer_stream(
     user_prompt = build_user_prompt(
       topic=topic,
       word_count=word_count,
-      strategy=strategy,
-      member_name=member_name,
-      electorate=electorate
+      other_instructions=other_instructions,
+      strategy=strategy
     )
 
     # Calculate token limit
@@ -283,7 +235,7 @@ def generate_dixer_stream(
     stream = client.chat.completions.create(
       model=model,
       messages=[
-        {"role": "system", "content": DIXER_SYSTEM_PROMPT},
+        {"role": "system", "content": government_question_SYSTEM_PROMPT},
         {"role": "user", "content": user_prompt}
       ],
       temperature=0.7,
@@ -307,7 +259,7 @@ def generate_dixer_stream(
         yield f"data: {json.dumps({'chunk': content})}\n\n"
 
     # When streaming is complete, parse the full response
-    parsed = parse_dixer_response(full_response)
+    parsed = parse_government_question_response(full_response)
 
     # Send the final parsed result
     yield f"data: {json.dumps({'done': True, 'question': parsed['question'], 'answer': parsed['answer']})}\n\n"

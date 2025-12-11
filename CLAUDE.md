@@ -24,21 +24,6 @@
 - **Server:** Flask development server (0.0.0.0:5000)
 - **Startup:** `python main.py` or `uv run main.py`
 
-### Directory Structure
-```
-app/
-├── __init__.py              # Application factory (create_app)
-├── routes.py                # Blueprint with all HTTP routes
-├── services/                # Business logic layer
-│   ├── openai_client.py     # OpenRouter API client setup
-│   └── dixer_service.py     # Dixer generation logic
-├── static/                  # CSS, JavaScript
-└── templates/               # Jinja2 HTML templates
-main.py                      # Application entry point
-pyproject.toml              # UV dependency configuration
-.env                        # Environment variables (API keys)
-```
-
 ### Technology Stack
 - **Framework:** Flask 3.1.2+
 - **Python Version:** 3.14+
@@ -52,18 +37,8 @@ pyproject.toml              # UV dependency configuration
 ### Database & Persistence
 **NONE** - Application is currently stateless. All data is ephemeral (exists only during request lifecycle).
 
-### Routes Overview
-| Method | Path | Function | Purpose |
-|--------|------|----------|---------|
-| GET | `/` | `index()` | Dashboard/home page |
-| GET | `/government-question-writer` | `government_question_writer()` | Dixer generation form |
-| POST | `/government-question-writer/stream` | `government_question_writer_stream()` | Server-Sent Events (SSE) streaming endpoint for AI generation |
-
 ### Services Architecture
-**Services are framework-agnostic** - No Flask dependencies, pure Python business logic:
-- `openai_client.py`: Client configuration, API key validation
-- `dixer_service.py`: Prompt building, response parsing, streaming generation
- - `forms.py`: WTForms definitions for server-side validation and CSRF token management
+**Services are framework-agnostic** - No Flask dependencies, pure Python business logic
 
 ### Configuration Management
 - **Environment Variables:** `.env` file (loaded via python-dotenv)

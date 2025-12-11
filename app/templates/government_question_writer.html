@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Dixer Writer - CollinsGPT{% endblock %}
+{% block title %}Government Question Writer - CollinsGPT{% endblock %}
 
 {% block content %}
 <!-- Header -->
@@ -8,7 +8,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-2">
             <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Dashboard</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Dixer Writer</li>
+            <li class="breadcrumb-item active" aria-current="page">Government Question Writer</li>
         </ol>
     </nav>
     <div class="d-flex align-items-center">
@@ -16,7 +16,7 @@
             <i class="bi bi-mic-fill fs-4 text-labor"></i>
         </div>
         <div>
-            <h1 class="h3 fw-bold text-dark mb-0">Government Question Dixer Writer</h1>
+            <h1 class="h3 fw-bold text-dark mb-0">Government Question Writer</h1>
             <p class="text-muted mb-0">Generate parliamentary questions and ministerial answers</p>
         </div>
     </div>
@@ -39,7 +39,7 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <form id="dixer-form" method="post" action="{{ url_for('main.government_question_writer_stream') }}">
+                <form id="government-question-form" method="post" action="{{ url_for('main.government_question_writer_stream') }}">
                     {{ form.hidden_tag() }}
                     <!-- Answer Word Count -->
                     <div class="mb-4">
@@ -78,34 +78,19 @@
                         <div class="form-text">The main subject the question will be about.</div>
                     </div>
 
-                    <!-- Member Asking -->
+                    <!-- Other instructions -->
                     <div class="mb-4">
-                        <label for="member_name" class="form-label fw-semibold">
-                            Member Asking <span class="text-muted fw-normal">(optional)</span>
+                        <label for="other_instructions" class="form-label fw-semibold">
+                          Other Instructions
                         </label>
-                        <input
-                            type="text"
+                        <textarea
                             class="form-control"
-                            id="member_name"
-                            name="member_name"
-                            placeholder="e.g., Ms Sharon Claydon"
-                            value="{{ form.member_name.data }}">
-                        <div class="form-text">Leave blank if unknown - a placeholder will be used.</div>
-                    </div>
-
-                    <!-- Member's Electorate -->
-                    <div class="mb-4">
-                        <label for="electorate" class="form-label fw-semibold">
-                            Member's Electorate <span class="text-muted fw-normal">(optional)</span>
-                        </label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="electorate"
-                            name="electorate"
-                            placeholder="e.g., Newcastle"
-                            value="{{ form.electorate.data }}">
-                        <div class="form-text">Leave blank if unknown - a placeholder will be used.</div>
+                            id="other_instructions"
+                            name="other_instructions"
+                            rows="4"
+                            placeholder="Enter the core policy, funding announcement, or news story..."
+                            required>{{ form.other_instructions.data }}</textarea>
+                        <div class="form-text">(Optional) any other instructions to give the AI model</div>
                     </div>
 
                     <!-- Strategy -->
@@ -151,7 +136,7 @@
 
                     <!-- Submit Button -->
                     <button type="submit" id="submit-btn" class="btn btn-labor w-100 py-2">
-                        <span id="btn-text"><i class="bi bi-magic me-2"></i>Generate Dixer</span>
+                        <span id="btn-text"><i class="bi bi-magic me-2"></i>Generate Government Question</span>
                         <span id="btn-loading" class="d-none">
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             Generating...
@@ -172,7 +157,7 @@
                         <div class="spinner-grow spinner-grow-sm text-labor me-3" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <span class="fw-semibold text-muted">Generating your dixer...</span>
+                        <span class="fw-semibold text-muted">Generating your government question...</span>
                     </div>
                     <div class="progress" style="height: 4px;">
                         <div class="progress-bar progress-bar-striped progress-bar-animated bg-labor" role="progressbar" style="width: 100%"></div>
@@ -247,7 +232,7 @@
                     <i class="bi bi-chat-square-text fs-1 text-muted"></i>
                 </div>
                 <h5 class="text-muted fw-semibold">No Output Yet</h5>
-                <p class="text-muted mb-0">Fill in the form and click "Generate Dixer" to create a parliamentary question and answer.</p>
+                <p class="text-muted mb-0">Fill in the form and click "Generate Government Question" to create a parliamentary question and answer.</p>
             </div>
         </div>
     </div>
@@ -256,7 +241,7 @@
 
 {% block extra_js %}
 <script>
-    const form = document.getElementById('dixer-form');
+    const form = document.getElementById('government-question-form');
     const submitBtn = document.getElementById('submit-btn');
     const btnText = document.getElementById('btn-text');
     const btnLoading = document.getElementById('btn-loading');
@@ -376,8 +361,7 @@
         const formData = {
             word_count: parseInt(document.getElementById('word_count').value),
             topic: document.getElementById('topic').value,
-            member_name: document.getElementById('member_name').value,
-            electorate: document.getElementById('electorate').value,
+            other_instructions: document.getElementById('other_instructions').value,
             strategy: document.getElementById('strategy').value,
             model: document.getElementById('model').value
         };

@@ -16,8 +16,8 @@ from flask import Blueprint, render_template, request, Response, stream_with_con
 
 # Import our service modules (the business logic)
 from .services.openai_client import check_api_key_configured
-from .services.dixer_service import generate_dixer_stream
-from .forms import DixerForm
+from .services.government_question_service import generate_government_question_stream
+from .forms import GovernmentQuestionForm
 
 # Create a Blueprint - a way to organize related routes
 # Think of it like a mini-application within our main Flask app
@@ -95,27 +95,15 @@ def index():
 
 @bp.route('/government-question-writer')
 def government_question_writer():
-  """
-  Display the Dixer Writer page.
-
-  This shows the form where users can input details to generate a Dorothy Dixer.
-
-  Returns:
-    str: Rendered HTML for the dixer writer page
-  """
   # Instantiate WTForms form (provides CSRF token + defaults)
-  form = DixerForm()
+  form = GovernmentQuestionForm()
   return render_template('government_question_writer.html', form=form, active_page='government_question_writer')
 
 
 @bp.route('/government-question-writer/stream', methods=['POST'])
 def government_question_writer_stream():
   """
-  Handle streaming generation of Dixers.
-
-  This is the streaming version of the dixer writer. Instead of waiting for
-  the complete response, it sends the AI's output word-by-word as it's generated.
-  This provides a much better user experience.
+  Handle streaming generation of government questions.
 
   This route only accepts POST requests with JSON data (not HTML form data).
   The frontend JavaScript calls this route and displays the streaming response.
@@ -131,14 +119,13 @@ def government_question_writer_stream():
   """
   # Accept either JSON (AJAX) or regular form submissions (WTForms)
   data = None
-  form = DixerForm()
+  form = GovernmentQuestionForm()
 
   if request.is_json:
     data = request.get_json()
     word_count = int(data.get('word_count', 200))
     topic = data.get('topic', '').strip()
-    member_name = data.get('member_name', '').strip()
-    electorate = data.get('electorate', '').strip()
+    other_instructions = data.get('other_instructions', '').strip()
     strategy = data.get('strategy', 'option_a')
     model = data.get('model', 'anthropic/claude-sonnet-4.5')
 
@@ -162,8 +149,7 @@ def government_question_writer_stream():
 
     word_count = int(form.word_count.data or 200)
     topic = (form.topic.data or '').strip()
-    member_name = (form.member_name.data or '').strip()
-    electorate = (form.electorate.data or '').strip()
+    other_instructions = (form.other_instructions.data or '').strip()
     strategy = form.strategy.data or 'option_a'
     model = form.model.data or 'anthropic/claude-sonnet-4.5'
 
@@ -175,12 +161,11 @@ def government_question_writer_stream():
 
   # Call the streaming service function
   # This returns a generator that yields SSE-formatted strings
-  stream = generate_dixer_stream(
+  stream = generate_government_question_stream(
     topic=topic,
+    other_instructions=other_instructions,
     word_count=word_count,
     strategy=strategy,
-    member_name=member_name if member_name else None,
-    electorate=electorate if electorate else None,
     model=model
   )
 
